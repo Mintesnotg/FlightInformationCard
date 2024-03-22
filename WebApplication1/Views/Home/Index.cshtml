@@ -1,0 +1,429 @@
+﻿@using Newtonsoft.Json
+@{
+    ViewData["Title"] = "Home Page";
+    const string data = @"{
+        ""awb"": {
+            ""awbOrigin"": ""AMS"",
+            ""awbDestination"": ""NBO"",
+            ""awbPieces"": ""15"",
+            ""awbWeight"": ""562.0"",
+            ""awbVolume"": ""1.98"",
+            ""routing"": {
+                ""line"": [
+                    {
+                        ""flightOrigin"": ""AMS"",
+                        ""flightDest"": ""LGG"",
+                        ""flightNum"": ""ET700T"",
+                        ""flightDate"": ""24FEB24"",
+                        ""alloc"": ""KK"",
+                        ""status"": ""RCF"",
+                        ""pieces"": ""15"",
+                        ""weight"": ""559.4"",
+                        ""volume"": ""1.98"",
+                        ""flightCat"": ""T"",
+                        ""sequence"": ""1""
+                    }
+                ]
+            },
+            ""segments"": {
+                ""segment"": [
+                    {
+                        ""segmentOrigin"": ""AMS"",
+                        ""segmentDest"": ""LGG"",
+                        ""segmentPieces"": [
+                            {
+                                ""flightNum"": """",
+                                ""flightDate"": ""23FEB24"",
+                                ""pieces"": ""15"",
+                                ""weight"": ""559.4"",
+                                ""status"": [
+                                    {
+                                        ""origin"": ""AMS"",
+                                        ""dest"": ""LGG"",
+                                        ""flightNum"": """",
+                                        ""flightCat"": """",
+                                        ""flightDate"": ""23FEB24"",
+                                        ""arrivalDate"": """",
+                                        ""arrivalTime"": """",
+                                        ""numPieces"": ""15"",
+                                        ""weight"": ""559.4"",
+                                        ""volume"": ""1.98"",
+                                        ""status"": ""Received From Shipper"",
+                                        ""eventDate"": ""23FEB24"",
+                                        ""eventTime"": ""21:07"",
+                                        ""statusCode"": ""DEP"",
+                                        ""sequence"": ""14""
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        ""segmentOrigin"": ""LGG"",
+                        ""segmentDest"": ""ADD"",
+                        ""segmentPieces"": [
+                            {
+                                ""flightNum"": ""ET3725"",
+                                ""flightDate"": ""25FEB24"",
+                                ""pieces"": ""15"",
+                                ""weight"": ""562.0"",
+                                ""status"": [
+                                    {
+                                        ""origin"": ""LGG"",
+                                        ""dest"": ""ADD"",
+                                        ""flightNum"": ""ET3725"",
+                                        ""flightCat"": ""F"",
+                                        ""flightDate"": ""25FEB24"",
+                                        ""arrivalDate"": ""26FEB24"",
+                                        ""arrivalTime"": ""03:05"",
+                                        ""numPieces"": ""15"",
+                                        ""weight"": ""562.0"",
+                                        ""volume"": ""1.97"",
+                                        ""status"": ""Booked"",
+                                        ""eventDate"": ""20FEB24"",
+                                        ""eventTime"": ""16:33"",
+                                        ""statusCode"": ""DEP"",
+                                        ""sequence"": ""5""
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+
+                    {
+                        ""segmentOrigin"": ""ADD"",
+                        ""segmentDest"": ""NBO"",
+                        ""segmentPieces"": [
+                            {
+                                ""flightNum"": ""ET3725"",
+                                ""flightDate"": ""25FEB24"",
+                                ""pieces"": ""15"",
+                                ""weight"": ""562.0"",
+                                ""status"": [
+                                    {
+                                        ""origin"": ""ADD"",
+                                        ""dest"": ""NBO"",
+                                        ""flightNum"": ""ET3725"",
+                                        ""flightCat"": ""F"",
+                                        ""flightDate"": ""25FEB24"",
+                                        ""arrivalDate"": ""26FEB24"",
+                                        ""arrivalTime"": ""03:05"",
+                                        ""numPieces"": ""15"",
+                                        ""weight"": ""562.0"",
+                                        ""volume"": ""1.97"",
+                                        ""status"": ""Booked"",
+                                        ""eventDate"": ""20FEB24"",
+                                        ""eventTime"": ""16:33"",
+                                        ""statusCode"": ""RCF"",
+                                        ""sequence"": ""5""
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                       
+                ]
+            }
+        }
+    }";
+    dynamic jsonData = JsonConvert.DeserializeObject<dynamic>(data);
+
+    var segments = jsonData["awb"]["segments"]["segment"];
+    
+    
+    var awborigin = jsonData["awb"]["awbOrigin"];
+    var awbdestination = jsonData["awb"]["awbDestination"];
+    var awbPice = jsonData["awb"]["awbPieces"];
+    var awbweight = jsonData["awb"]["awbWeight"];
+
+
+    List<string> stations = new List<string>();
+
+    foreach (var segment in segments)
+    {
+        var origin = segment["segmentOrigin"].ToString();
+        var dest = segment["segmentDest"].ToString();
+
+        if (!stations.Contains(origin))
+        {
+            stations.Add(origin);
+        }
+
+        if (!stations.Contains(dest))
+        {
+            stations.Add(dest);
+        }
+    }
+
+
+    List<string> statusCodes = new List<string>();
+
+    foreach (var segment in segments)
+    {
+        var segmentPieces = segment["segmentPieces"];
+
+        foreach (var segmentPiece in segmentPieces)
+        {
+            var status = segmentPiece["status"];
+
+            foreach (var stat in status)
+            {
+                var statusCode = stat["statusCode"].ToString();
+
+                if (!statusCodes.Contains(statusCode))
+                {
+                    statusCodes.Add(statusCode);
+                }
+            }
+        }
+    }
+
+    var statusCodeString = string.Join("-", statusCodes);
+
+    var route = string.Join("-", stations);
+    Dictionary<string, List<string>> stationStatusCodes = new Dictionary<string, List<string>>();
+
+    foreach (var station in stations)
+    {
+        List<string> stationCodes = new List<string>();
+
+        foreach (var segment in segments)
+        {
+            var segmentOrigin = segment["segmentOrigin"].ToString();
+            var segmentDest = segment["segmentDest"].ToString();
+
+            if (segmentOrigin == station || segmentDest == station)
+            {
+                var segmentPieces = segment["segmentPieces"];
+
+                foreach (var segmentPiece in segmentPieces)
+                {
+                    var status = segmentPiece["status"];
+
+                    foreach (var stat in status)
+                    {
+                        var statusCode = stat["statusCode"].ToString();
+
+                        if (!stationCodes.Contains(statusCode))
+                        {
+                            stationCodes.Add(statusCode);
+                        }
+                    }
+                }
+            }
+        }
+
+        stationStatusCodes.Add(station, stationCodes);
+    }
+    var stationName = "";
+    var statusCodess = "";
+    // Outputting the station status codes
+    foreach (var station in stationStatusCodes)
+    {
+        stationName = station.Key;
+        statusCodess = string.Join("-", station.Value);
+        Console.WriteLine($"Station: {stationName}, Status Codes: {statusCodess}");
+    }
+  
+}
+<style>
+ 
+    body{margin-top:20px;}
+
+.steps .step {
+    display: block;
+    width: 100%;
+    margin-bottom: 35px;
+    text-align: center
+}
+
+.steps .step .step-icon-wrap {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 80px;
+    text-align: center
+}
+
+.steps .step .step-icon-wrap::before,
+.steps .step .step-icon-wrap::after {
+    display: block;
+    position: absolute;
+    top: 50%;
+    width: 50%;
+    height: 3px;
+    margin-top: -1px;
+    background-color: #FFC300;
+    content: '';
+    z-index: 1
+}
+
+.steps .step .step-icon-wrap::before {
+    left: 0
+}
+
+.steps .step .step-icon-wrap::after {
+    right: 0
+}
+
+.steps .step .step-icon {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+            border: 1px solid #e1e7ec;
+    border-radius: 50%;
+            background-color: #f5f5f5;
+    color: #374250;
+    font-size: 38px;
+    line-height: 81px;
+    z-index: 5
+}
+
+.steps .step .step-title {
+    margin-top: 16px;
+    margin-bottom: 0;
+    color: #606975;
+    font-size: 14px;
+    font-weight: 500
+}
+
+.steps .step:first-child .step-icon-wrap::before {
+    display: none
+}
+
+.steps .step:last-child .step-icon-wrap::after {
+    display: none
+}
+
+.steps .step.completed .step-icon-wrap::before,
+.steps .step.completed .step-icon-wrap::after {
+    background-color: #0da9ef
+}
+
+.steps .step.completed .step-icon {
+    border-color: #0da9ef;
+    background-color: #0da9ef;
+    color: #fff
+}
+
+
+.bg-faded, .bg-secondary {
+    background-color: #f5f5f5 !important;
+}
+
+    .steps .step .step-icon-wrap::before,
+    .steps .step .step-icon-wrap::after {
+        background-color: #FFC300;
+    }
+
+    .steps .step .step-icon.departure {
+        border-color: #FFC300;
+    }
+
+    .steps .step .step-icon.departure-icon {
+        background-color: #FFC300;
+        border-color: #FFC300;
+        color: #374250;
+    }
+
+    .steps .step.dep-departure .step-icon-wrap::before,
+    .steps .step.dep-departure .step-icon-wrap::after {
+        background-color: #008080; /* Change to the desired color */
+    }
+
+    .steps .step.dep-departure .step-icon {
+        border-color: #008080; /* Change to the desired color */
+        background-color: #008080; /* Change to the desired color */
+        color: #FFFFFF; /* Change to the desired color */
+    }
+
+    .rotate-90 {
+        transform: rotate(90deg);
+    }
+
+    .rotate-45 {
+        transform: rotate(45deg);
+    }
+
+
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pixeden-stroke-7-icon@1.2.3/pe-icon-7-stroke/dist/pe-icon-7-stroke.min.css">
+
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+</head>
+<body>
+    <div class="card shadow-lg rounded">
+        <div class="container text-center">
+            <div class="row mt-3">
+                <div class="col-lg-3">
+                    <div>
+                        <p class="atomic-heading h6 no-margin">Origin</p>
+                        <p class="atomic-heading h6 no-margin strong">@awborigin</p>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div>
+                        <p class="atomic-heading h6 no-margin">Destination</p>
+                        <p class="atomic-heading h6 no-margin strong">@awbdestination</p>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div>
+                        <p class="atomic-heading h6 no-margin">Pieces</p>
+                        <p class="atomic-heading h6 no-margin strong">@awbPice/@awbPice</p>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div>
+                        <p class="atomic-heading h6 no-margin">Weight</p>
+                        <p class="atomic-heading h6 no-margin strong">@awbweight/@awbweight</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card-body">
+                        <div class="steps d-flex flex-wrap flex-sm-nowrap justify-content-between padding-top-2x padding-bottom-1x">
+                            @foreach (var station in stations)
+                            {
+                                var stationStatus = stationStatusCodes[station];
+                                var isFirstItem = station == stations.First();
+                                var isLastItem = station == stations.Last();
+
+                                <div class="step @(stationStatus.Contains("DEP") ? "dep-departure" : "") @(isLastItem ? "last-item" : "")">
+                                    <div class="step-icon-wrap">
+                                        <div class="step-icon @(stationStatus.Contains("DEP") ? "departure-icon" : "")">
+                                            <i class="pe-7s-plane @(isLastItem ? "rotate-90" : (isFirstItem ? "" : "rotate-45"))"></i>
+                                        </div>
+                                    </div>
+                                    <h4 class="step-title">@station</h4>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+   
+
+    </script>
+  
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
+
+<script>
+
+</script>
